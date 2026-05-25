@@ -1,5 +1,4 @@
 # TUBES-JARKOM-SEM4
-# TUBES-JARKOM-SEM4
 
 ## Implementasi dan Analisis Kinerja Sistem Client Proxy Server Berbasis Socket Python: Evaluasi Protokol TCP/UDP dan Parameter Quality of Service
 
