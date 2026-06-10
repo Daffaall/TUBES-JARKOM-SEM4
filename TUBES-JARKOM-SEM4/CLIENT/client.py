@@ -3,22 +3,30 @@ import time
 import argparse
 import statistics
 
-PROXY_HOST = '127.0.0.1' 
-PROXY_PORT = 8080
-SERVER_HOST = '127.0.0.1' 
-UDP_PORT = 9000
+# =====================================================================
+# --- KONFIGURASI PROXY (Ganti sesuai IP mesin Proxy lu) ---
+# =====================================================================
+PROXY_HOST = '10.130.3.21'       # IP mesin Proxy (bukan localhost lagi)
+PROXY_PORT = 8080                 # Port Proxy untuk TCP & UDP
+# =====================================================================
 
 def test_tcp(path="/index.html"):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((PROXY_HOST, PROXY_PORT))
-    request = f"GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-    s.sendall(request.encode())
-    
-    # Menerima dan menampilkan response HTML pada terminal
-    response = s.recv(4096).decode('utf-8', errors='ignore')
-    print("[*] HTTP Response (Header) dari Proxy:\n")
-    print(response.split("\r\n\r\n")[0]) # Tampilkan header saja agar rapi
-    s.close()
+    try:
+        s.connect((PROXY_HOST, PROXY_PORT))
+        
+        # Header Host ditembak ke IP Proxy, urusan kelanjutannya ada di internal proxy
+        request = f"GET {path} HTTP/1.1\r\nHost: {PROXY_HOST}\r\nConnection: close\r\n\r\n"
+        s.sendall(request.encode())
+        
+        # Menerima dan menampilkan response HTML pada terminal
+        response = s.recv(4096).decode('utf-8', errors='ignore')
+        print("[*] HTTP Response (Header) dari Proxy:\n")
+        print(response.split("\r\n\r\n")[0]) # Tampilkan header saja agar rapi
+    except Exception as e:
+        print(f"[!] Gagal konek ke Proxy lewat TCP: {e}")
+    finally:
+        s.close()
 
 def test_udp():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -28,7 +36,7 @@ def test_udp():
     lost_packets = 0
     total_packets = 10 
     
-    print(f"[*] Memulai UDP Ping ke {SERVER_HOST}:{UDP_PORT}")
+    print(f"[*] Memulai UDP Ping ke Proxy ({PROXY_HOST}:{PROXY_PORT})")
     
     for seq in range(1, total_packets + 1):
         timestamp = time.time()
@@ -36,14 +44,16 @@ def test_udp():
         message = f"Ping {seq} {timestamp}" 
         
         try:
-            s.sendto(message.encode(), (SERVER_HOST, UDP_PORT))
+            s.sendto(message.encode(), (PROXY_HOST, PROXY_PORT))
             data, _ = s.recvfrom(1024)
             rtt = (time.time() - timestamp) * 1000
             rtt_list.append(rtt)
-            print(f"Reply from {SERVER_HOST}: seq={seq} time={rtt:.2f} ms")
+            print(f"Reply from {PROXY_HOST}: seq={seq} time={rtt:.2f} ms")
         except socket.timeout:
             lost_packets += 1
             print(f"Request timed out for seq={seq}")
+        except Exception as e:
+            print(f"[!] Error saat kirim/terima paket UDP: {e}")
             
     # Kalkulasi QoS 
     if rtt_list:

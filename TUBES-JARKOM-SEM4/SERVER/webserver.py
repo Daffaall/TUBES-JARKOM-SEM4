@@ -7,8 +7,15 @@ TCP_PORT = 8000
 UDP_PORT = 9000
 HOST = '0.0.0.0'
 
+ALLOWED_PROXY_IP = ['10.130.3.21']  # Tambahkan IP proxy yang diizinkan untuk mengakses server
 def handle_tcp(client_socket, addr):
     try:
+        # Memeriksa apakah IP client termasuk dalam daftar IP proxy yang diizinkan
+        if addr[0] not in ALLOWED_PROXY_IP:
+            print(f"[SERVER TCP] Akses ditolak dari IP: {addr[0]}")
+            client_socket.close()
+            return
+
         request = client_socket.recv(4096).decode('utf-8', errors='ignore')
         if not request: return
         

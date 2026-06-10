@@ -4,7 +4,7 @@ import os
 import time
 
 PROXY_PORT = 8080
-SERVER_HOST = '127.0.0.1' 
+SERVER_HOST = '10.130.2.153' 
 SERVER_PORT = 8000
 CACHE_DIR = "cache"
 
